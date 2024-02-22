@@ -14,6 +14,9 @@ public:
 
     static DateTime now();
 
+    std::string toString() const;
+    static DateTime fromString(std::string const& str);
+
     Date date();
     Time time();
 

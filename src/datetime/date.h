@@ -26,6 +26,9 @@ public:
 
     int weekDay() const;
 
+    std::string toString() const;
+    static Date fromString(std::string const& str);
+
     bool operator<(Date other);
     bool operator>(Date other);
     bool operator==(Date other);

@@ -1,4 +1,5 @@
 #include "date.h"
+#include <regex>
 
 namespace datetime {
 
@@ -52,6 +53,24 @@ void Date::setDay(int unsigned day) {
 int Date::weekDay() const {
     std::chrono::weekday wday{std::chrono::sys_days(_ymd)};
     return wday.c_encoding();
+}
+
+std::string Date::toString() const {
+    return std::format("{}-{:0>2}-{:0>2}", year(), month(), day());
+}
+
+Date Date::fromString(const std::string& str) {
+    static std::regex regex(R"-(^(\d{4}).(\d{1,2}).(\d{1,2})$)-");
+    std::smatch smatch;
+    if (!std::regex_match(str, smatch, regex)) {
+        return {};
+    }
+
+    int const y = std::stoi(smatch[1].str());
+    int unsigned const m = std::stoi(smatch[2].str());
+    int unsigned const d = std::stoi(smatch[3].str());
+
+    return Date(y, m, d);
 }
 
 bool Date::operator<(Date other) {

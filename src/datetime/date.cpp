@@ -11,9 +11,12 @@ Date::Date(std::chrono::year_month_day ymd) :
     _ymd(ymd) { }
 
 Date Date::now() {
-    // TODO: select timezone
     std::chrono::time_point const tpNow{std::chrono::system_clock::now()};
-    std::chrono::year_month_day const ymd{std::chrono::floor<std::chrono::days>(tpNow)};
+
+    std::chrono::time_zone const* timeZone = std::chrono::current_zone();
+    auto localTime = timeZone->to_local(tpNow);
+
+    std::chrono::year_month_day const ymd{std::chrono::floor<std::chrono::days>(localTime)};
 
     return Date(ymd);
 }

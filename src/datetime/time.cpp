@@ -21,9 +21,12 @@ Time::Time(std::chrono::seconds hms) :
     _hms{hms} { }
 
 Time Time::now() {
-    // TODO: select timezone
     std::chrono::time_point tpNow{std::chrono::system_clock::now()};
-    std::chrono::seconds hms{std::chrono::floor<std::chrono::seconds>(tpNow.time_since_epoch()) % hours_a_day_to_seconds};
+
+    std::chrono::time_zone const* timeZone = std::chrono::current_zone();
+    auto localTime = timeZone->to_local(tpNow);
+
+    std::chrono::seconds hms{std::chrono::floor<std::chrono::seconds>(localTime.time_since_epoch()) % hours_a_day_to_seconds};
     return Time(hms);
 }
 

@@ -1,4 +1,5 @@
 #include "time.h"
+#include <regex>
 
 namespace {
 
@@ -55,6 +56,24 @@ int Time::seconds() const {
 void Time::setSeconds(int unsigned seconds) {
     seconds = seconds % seconds_a_minute;
     _hms = (_hms - _hms % seconds_a_minute) + std::chrono::seconds{seconds};
+}
+
+std::string Time::toString() const {
+    return std::format("{:0>2}:{:0>2}:{:0>2}", hours(), minutes(), seconds());
+}
+
+Time Time::fromString(const std::string& str) {
+    static std::regex regex(R"-(^(\d{1,2}).(\d{1,2}).(\d{1,2})$)-");
+    std::smatch smatch;
+    if (!std::regex_match(str, smatch, regex)) {
+        return {};
+    }
+
+    int unsigned const hh = std::stoi(smatch[1].str()) % 24;
+    int unsigned const mm = std::stoi(smatch[2].str()) % 60;
+    int unsigned const ss = std::stoi(smatch[3].str()) % 60;
+
+    return Time(hh, mm, ss);
 }
 
 bool Time::operator<(Time other) {

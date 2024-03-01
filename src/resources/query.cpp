@@ -2,6 +2,11 @@
 
 namespace query {
 
+std::string databseName() {
+    static std::string name = R"-(linkCollector.db)-";
+    return name;
+}
+
 std::vector<std::pair<int, std::string>> migrations() {
     return {
         {1, R"-(
@@ -26,11 +31,10 @@ DROP TABLE IF EXISTS schedule;
 CREATE TABLE schedule (
     idschedule INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
     title TEXT,
+    url TEXT,
     dtevent DATETIME,
     nrweekday INTEGER,
-    timestart INTEGER,
-    timeend INTEGER,
-    interval INTEGER
+    timestart VARCHAR(8)
 );
 )-"},
     };
@@ -51,8 +55,13 @@ std::string insert_links() {
     return insert;
 }
 
+std::string find_last_link() {
+    static std::string insert = R"-(SELECT idlink, idschedule, title, url, dtcreated FROM links WHERE idschedule = ? ORDER BY dtcreated DESC LIMIT 1;)-";
+    return insert;
+}
+
 std::string find_schedule() {
-    static std::string find = R"-(SELECT idschedule, title, dtevent, nrweekday, timestart, timeend, interval FROM schedule;)-";
+    static std::string find = R"-(SELECT idschedule, title, url, dtevent, nrweekday, timestart FROM schedule;)-";
     return find;
 }
 

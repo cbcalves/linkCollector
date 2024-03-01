@@ -24,6 +24,10 @@ public:
     int unsigned day() const;
     void setDay(int unsigned day);
 
+    void addDays(int days);
+    void addMonths(int months);
+    void addYears(int years);
+
     int weekDay() const;
 
     std::string toString() const;

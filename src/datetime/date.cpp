@@ -50,6 +50,54 @@ void Date::setDay(int unsigned day) {
     _ymd = std::chrono::year_month_day{_ymd.year(), _ymd.month(), std::chrono::day{day}};
 }
 
+void Date::addDays(int days) {
+    if (!isValid()) {
+        setDay(day() + days);
+        return;
+    }
+
+    while (days > 0) {
+        setDay(day() + 1);
+        if (!isValid()) {
+            addMonths(1);
+            setDay(1);
+        }
+        --days;
+    }
+
+    while (days < 0) {
+        setDay(day() - 1);
+        if (!isValid()) {
+            addMonths(-1);
+            setDay(31);
+            while (!isValid()) {
+                setDay(day() - 1);
+            }
+        }
+        ++days;
+    }
+}
+
+void Date::addMonths(int months) {
+    bool const wasValid = isValid();
+    _ymd = _ymd + std::chrono::months(months);
+    if (wasValid && !isValid()) {
+        while (!isValid()) {
+            addDays(-1);
+        }
+    }
+}
+
+void Date::addYears(int years) {
+    bool const wasValid = isValid();
+    _ymd = _ymd + std::chrono::years(years);
+    if (wasValid && !isValid()) {
+        while (!isValid()) {
+            addDays(-1);
+        }
+    }
+}
+
 int Date::weekDay() const {
     std::chrono::weekday wday{std::chrono::sys_days(_ymd)};
     return wday.c_encoding() + 1;

@@ -1,6 +1,7 @@
 #ifndef EVENTITEM_H
 #define EVENTITEM_H
 
+#include <chrono>
 #include <functional>
 
 namespace eventloop {
@@ -12,16 +13,20 @@ public:
         _ptr{ptr},
         _exec{getMethod<Event>(&Event::exec)} { }
 
-    inline void exec() const { _exec(_ptr); }
+    inline int exec() const { return _exec(_ptr); }
+
+    inline std::chrono::milliseconds next() const { return _next; };
+    inline void setNext(std::chrono::milliseconds const next) { _next = next; }
 
 private:
-    std::function<void(void*)> _exec;
+    std::function<int(void*)> _exec;
     void* _ptr{nullptr};
+    std::chrono::milliseconds _next{};
 
     template<class Event, typename Func>
-    std::function<void(void*)> getMethod(Func f) {
-        return [f](void* p) -> void {
-            (reinterpret_cast<Event*>(p)->*f)();
+    std::function<int(void*)> getMethod(Func f) {
+        return [f](void* p) -> int {
+            return (reinterpret_cast<Event*>(p)->*f)();
         };
     }
 };

@@ -21,8 +21,12 @@ void EventLoop::exec() {
         auto const start = std::chrono::system_clock::now();
         auto const sleeptime = start + std::chrono::milliseconds(_timeout);
 
-        for (auto const& event : _events) {
-            event.exec();
+        auto const startMilliseconds = std::chrono::floor<std::chrono::milliseconds>(start).time_since_epoch();
+        for (auto& event : _events) {
+            if (!_shutdown && event.next() < startMilliseconds) {
+                const int interval = event.exec();
+                event.setNext(startMilliseconds + std::chrono::milliseconds{interval});
+            }
         }
 
         conditionVariable.wait_until(lock, sleeptime);

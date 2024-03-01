@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.27)
 
 project(linkCollector LANGUAGES CXX)
 
+option(ENABLE_TEST "Build with tests." OFF)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -51,7 +53,9 @@ target_link_libraries(linkCollectorLib
     SQLite::SQLite3
 )
 
-)
+if (ENABLE_TEST)
+    add_subdirectory(tests)
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS linkCollector

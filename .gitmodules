@@ -1,0 +1,6 @@
+[submodule "external/spdlog"]
+	path = external/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "external/sqlite_modern_cpp"]
+	path = external/sqlite_modern_cpp
+	url = https://github.com/SqliteModernCpp/sqlite_modern_cpp.git

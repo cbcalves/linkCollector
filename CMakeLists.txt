@@ -38,13 +38,16 @@ add_library(linkCollectorLib
     src/eventloop/eventloop.cpp
     src/migrate/migrate.h
     src/migrate/migrate.cpp
+    src/model/linkmodel.h
+    src/model/linkmodel.cpp
+    src/model/schedulemodel.h
+    src/model/schedulemodel.cpp
     src/request/request.h
     src/request/request.cpp
     src/request/process.h
     src/request/process.cpp
     src/resources/query.h
     src/resources/query.cpp
-
 )
 
 target_link_libraries(linkCollectorLib

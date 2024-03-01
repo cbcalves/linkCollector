@@ -9,7 +9,7 @@
 namespace migrate {
 
 Migrate::Migrate() :
-    _db{new sqlite::database("linkCollector.db")} { }
+    _db{new sqlite::database(query::databseName())} { }
 
 Migrate::~Migrate() {
     delete _db;
@@ -45,11 +45,9 @@ std::set<int> Migrate::load() {
     std::set<int> ids{};
 
     try {
-        for (auto&& row : (*_db) << sql) {
-            int id{};
-            row >> id;
+        (*_db) << sql >> [&](const int id) -> void {
             ids.insert(id);
-        }
+        };
     } catch (...) {
         // There is no select before the schema creation
     }

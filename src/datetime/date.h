@@ -29,9 +29,11 @@ public:
     std::string toString() const;
     static Date fromString(std::string const& str);
 
-    bool operator<(Date other);
-    bool operator>(Date other);
-    bool operator==(Date other);
+    bool operator<(const Date other) const;
+    bool operator>(const Date other) const;
+    bool operator==(const Date other) const;
+
+    void setDate(Date date);
 
 protected:
     std::chrono::year_month_day date() const;

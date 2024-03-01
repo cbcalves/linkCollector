@@ -52,7 +52,7 @@ void Date::setDay(int unsigned day) {
 
 int Date::weekDay() const {
     std::chrono::weekday wday{std::chrono::sys_days(_ymd)};
-    return wday.c_encoding();
+    return wday.c_encoding() + 1;
 }
 
 std::string Date::toString() const {
@@ -73,16 +73,20 @@ Date Date::fromString(const std::string& str) {
     return Date(y, m, d);
 }
 
-bool Date::operator<(Date other) {
+bool Date::operator<(const Date other) const {
     return date() < other.date();
 }
 
-bool Date::operator>(Date other) {
+bool Date::operator>(const Date other) const {
     return date() > other.date();
 }
 
-bool Date::operator==(Date other) {
+bool Date::operator==(const Date other) const {
     return date() == other.date();
+}
+
+void Date::setDate(Date date) {
+    _ymd = date.date();
 }
 
 std::chrono::year_month_day Date::date() const {

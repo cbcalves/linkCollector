@@ -76,15 +76,15 @@ Time Time::fromString(const std::string& str) {
     return Time(hh, mm, ss);
 }
 
-bool Time::operator<(Time other) {
+bool Time::operator<(const Time other) const {
     return time() < other.time();
 }
 
-bool Time::operator>(Time other) {
+bool Time::operator>(const Time other) const {
     return time() > other.time();
 }
 
-bool Time::operator==(Time other) {
+bool Time::operator==(const Time other) const {
     return time() == other.time();
 }
 
@@ -94,6 +94,10 @@ std::chrono::seconds Time::time() const {
 
 void Time::setTime(std::chrono::seconds hms) {
     _hms = hms % hours_a_day_to_seconds;
+}
+
+void Time::setTime(Time time) {
+    _hms = time.time();
 }
 
 }

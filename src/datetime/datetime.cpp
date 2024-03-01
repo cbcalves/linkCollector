@@ -30,12 +30,24 @@ DateTime DateTime::fromString(const std::string& str) {
     return DateTime(Date::fromString(dt), Time::fromString(tm));
 }
 
-Date DateTime::date() {
+Date DateTime::date() const {
     return Date(Date::date());
 }
 
-Time DateTime::time() {
+Time DateTime::time() const {
     return Time(Time::time());
+}
+
+bool DateTime::operator<(const DateTime other) const {
+    return date() < other.date() || (date() == other.date() && time() < other.time());
+}
+
+bool DateTime::operator>(const DateTime other) const {
+    return date() > other.date() || (date() == other.date() && time() > other.time());
+}
+
+bool DateTime::operator==(const DateTime other) const {
+    return date() == other.date() && time() == other.time();
 }
 
 DateTime::DateTime(Date date, Time time) :

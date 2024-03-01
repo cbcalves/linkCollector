@@ -17,8 +17,12 @@ public:
     std::string toString() const;
     static DateTime fromString(std::string const& str);
 
-    Date date();
-    Time time();
+    Date date() const;
+    Time time() const;
+
+    bool operator<(const DateTime other) const;
+    bool operator>(const DateTime other) const;
+    bool operator==(const DateTime other) const;
 
 private:
     DateTime(Date date, Time time);

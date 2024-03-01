@@ -25,13 +25,13 @@ public:
     std::string toString() const;
     static Time fromString(std::string const& str);
 
-    bool operator<(Time other);
-    bool operator>(Time other);
-    bool operator==(Time other);
+    bool operator<(const Time other) const;
+    bool operator>(const Time other) const;
+    bool operator==(const Time other) const;
 
-protected:
     std::chrono::seconds time() const;
     void setTime(std::chrono::seconds hms);
+    void setTime(Time time);
 
 private:
     std::chrono::seconds _hms{};

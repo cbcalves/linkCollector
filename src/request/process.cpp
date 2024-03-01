@@ -29,8 +29,12 @@ nlohmann::json process(std::string const& data) {
     return nlohmann::json::parse(jsonData);
 }
 
-std::vector<Link> getYoutubeLinks(nlohmann::json const& json) {
-    std::vector<Link> links{};
+std::vector<model::LinkModel> getYoutubeLinks(nlohmann::json const& json) {
+    if (json.empty()) {
+        return {};
+    }
+
+    std::vector<model::LinkModel> links{};
 
     auto jsonLinks = json["props"]["pageProps"]["links"];
     for (auto const& jsonLink : jsonLinks) {

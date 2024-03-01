@@ -3,15 +3,12 @@
 
 #include <nlohmann/json.hpp>
 
+#include "model/linkmodel.h"
+
 namespace request {
 
-struct Link {
-    std::string title{};
-    std::string url{};
-};
-
 nlohmann::json process(std::string const& data);
-std::vector<Link> getYoutubeLinks(nlohmann::json const& json);
+std::vector<model::LinkModel> getYoutubeLinks(nlohmann::json const& json);
 
 }
 #endif // PROCESS_H

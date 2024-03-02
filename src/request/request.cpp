@@ -1,6 +1,7 @@
 #include "request.h"
 
 #include <curl/curl.h>
+#include <spdlog/spdlog.h>
 
 int writer(char* data, size_t size, size_t nmemb, std::string* writerData) {
     if (writerData == NULL)
@@ -17,25 +18,25 @@ bool init(CURL*& conn, char* errorBuffer, std::string const& url, std::string* b
     conn = curl_easy_init();
 
     if (conn == NULL) {
-        fprintf(stderr, "Failed to create CURL connection\n");
+        spdlog::critical("{} Failed to create CURL connection", __PRETTY_FUNCTION__);
         exit(EXIT_FAILURE);
     }
 
     code = curl_easy_setopt(conn, CURLOPT_ERRORBUFFER, errorBuffer);
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to set error buffer [%d]\n", code);
+        spdlog::critical("{} Failed to set error buffer [{}]", __PRETTY_FUNCTION__, static_cast<int>(code));
         return false;
     }
 
     code = curl_easy_setopt(conn, CURLOPT_URL, url.c_str());
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to set URL [%s]\n", errorBuffer);
+        spdlog::critical("{} Failed to set URL [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 
     code = curl_easy_setopt(conn, CURLOPT_FOLLOWLOCATION, 1L);
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to set redirect option [%s]\n", errorBuffer);
+        spdlog::critical("{} Failed to set redirect option [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 
@@ -52,7 +53,7 @@ bool init(CURL*& conn, char* errorBuffer, std::string const& url, std::string* b
      */
     code = curl_easy_setopt(conn, CURLOPT_SSL_VERIFYPEER, 0L);
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to set skip verify peer [%s]\n", errorBuffer);
+        spdlog::critical("{} Failed to set skip verify peer [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 #endif
@@ -66,7 +67,7 @@ bool init(CURL*& conn, char* errorBuffer, std::string const& url, std::string* b
      */
     code = curl_easy_setopt(conn, CURLOPT_SSL_VERIFYHOST, 0L);
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to set skip verify host [%s]\n", errorBuffer);
+        spdlog::critical("{} Failed to set skip verify host [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 #endif
@@ -74,19 +75,19 @@ bool init(CURL*& conn, char* errorBuffer, std::string const& url, std::string* b
     /* cache the CA cert bundle in memory for a week */
     code = curl_easy_setopt(conn, CURLOPT_CA_CACHE_TIMEOUT, 604800L);
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to set certificates [%s]\n", errorBuffer);
+        spdlog::critical("{} Failed to set certificates [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 
     code = curl_easy_setopt(conn, CURLOPT_WRITEFUNCTION, writer);
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to set writer [%s]\n", errorBuffer);
+        spdlog::critical("{} Failed to set writer [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 
     code = curl_easy_setopt(conn, CURLOPT_WRITEDATA, buffer);
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to set write data [%s]\n", errorBuffer);
+        spdlog::critical("{} Failed to set write data [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 
@@ -105,7 +106,7 @@ std::optional<std::string> request(std::string const& url) {
 
     // Initialize CURL connection
     if (!init(conn, errorBuffer, url, &buffer)) {
-        fprintf(stderr, "Connection initialization failed\n");
+        spdlog::critical("{} Connection initialization failed", __PRETTY_FUNCTION__);
         return {};
     }
 
@@ -114,7 +115,7 @@ std::optional<std::string> request(std::string const& url) {
     curl_easy_cleanup(conn);
 
     if (code != CURLE_OK) {
-        fprintf(stderr, "Failed to get '%s'\n", url.c_str());
+        spdlog::critical("{} Failed to set get '{}'", __PRETTY_FUNCTION__, url);
         return {};
     }
 

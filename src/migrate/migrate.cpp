@@ -2,6 +2,7 @@
 
 #include <regex>
 #include <set>
+#include <spdlog/spdlog.h>
 #include <sqlite_modern_cpp.h>
 
 #include "resources/query.h"
@@ -17,25 +18,30 @@ Migrate::~Migrate() {
 
 bool Migrate::update() {
     std::vector<std::pair<int, std::string>> const migrations{query::migrations()};
+    spdlog::info("{} [migrations.size]{}", __PRETTY_FUNCTION__, migrations.size());
 
     std::set<int> const migrated{load()};
+    spdlog::info("{} [migrated.size]{}", __PRETTY_FUNCTION__, migrated.size());
     for (auto& [id, sql] : migrations) {
         if (migrated.contains(id)) {
             continue;
         }
 
         try {
+            spdlog::info("{} executing [id]{}", __PRETTY_FUNCTION__, id);
+
             (*_db) << "begin;";
             query(sql);
             save(id);
             (*_db) << "commit;";
         } catch (sqlite::sqlite_exception const& e) {
             (*_db) << "rollback;";
-            fprintf(stderr, "Failed to migrate [%s][%d][%d]\nSQL[%s]\n", e.what(), e.get_code(), e.get_extended_code(), e.get_sql().c_str());
+            spdlog::critical("{} Failed to migrate [{}] [{}] [{}] [{}]", __PRETTY_FUNCTION__, e.what(), e.get_code(), e.get_extended_code(), e.get_sql());
             return false;
         }
     }
 
+    spdlog::info("{} finished", __PRETTY_FUNCTION__);
     return true;
 }
 
@@ -49,7 +55,7 @@ std::set<int> Migrate::load() {
             ids.insert(id);
         };
     } catch (...) {
-        // There is no select before the schema creation
+        spdlog::warn("{} no schema found", __PRETTY_FUNCTION__);
     }
 
     return ids;

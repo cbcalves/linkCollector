@@ -23,8 +23,10 @@ if(NOT ${nlohmann_json_FOUND})
     FetchContent_MakeAvailable(json)
 endif()
 
-include_directories(sqlite_modern_cpp/hdr)
+include_directories(external/sqlite_modern_cpp/hdr)
 include_directories(src)
+
+add_subdirectory(external/spdlog)
 
 add_library(linkCollectorLib
     src/datetime/date.h

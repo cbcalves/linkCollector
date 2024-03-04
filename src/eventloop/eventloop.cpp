@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <spdlog/spdlog.h>
 
 namespace eventloop {
 
@@ -10,6 +11,7 @@ void EventLoop::addEvent(EventItem&& event) {
 }
 
 void EventLoop::shutdown() {
+    spdlog::info("{}", __PRETTY_FUNCTION__);
     _shutdown = true;
 }
 

@@ -12,29 +12,45 @@ int writer(char* data, size_t size, size_t nmemb, std::string* writerData) {
     return size * nmemb;
 }
 
-bool init(CURL*& conn, char* errorBuffer, std::string const& url, std::string* buffer) {
+bool init(std::shared_ptr<CURL>& conn, char* errorBuffer, std::string const& url, std::string* buffer, FILE* verboseFile = nullptr) {
     CURLcode code;
 
-    conn = curl_easy_init();
+    conn.reset(curl_easy_init(), curl_easy_cleanup);
 
     if (conn == NULL) {
         spdlog::critical("{} Failed to create CURL connection", __PRETTY_FUNCTION__);
-        exit(EXIT_FAILURE);
+        return false;
     }
 
-    code = curl_easy_setopt(conn, CURLOPT_ERRORBUFFER, errorBuffer);
+#ifdef VERBOSE_CURL
+    /*
+     * Set library to display a lot of verbose information about its operations.
+     */
+    code = curl_easy_setopt(conn.get(), CURLOPT_VERBOSE, 0L);
+    if (code != CURLE_OK) {
+        spdlog::critical("{} Failed to set verbose mode [{}]", __PRETTY_FUNCTION__, errorBuffer);
+        return false;
+    }
+    code = curl_easy_setopt(conn.get(), CURLOPT_STDERR, verboseFile);
+    if (code != CURLE_OK) {
+        spdlog::critical("{} Failed to set verbose file [{}]", __PRETTY_FUNCTION__, errorBuffer);
+        return false;
+    }
+#endif
+
+    code = curl_easy_setopt(conn.get(), CURLOPT_ERRORBUFFER, errorBuffer);
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set error buffer [{}]", __PRETTY_FUNCTION__, static_cast<int>(code));
         return false;
     }
 
-    code = curl_easy_setopt(conn, CURLOPT_URL, url.c_str());
+    code = curl_easy_setopt(conn.get(), CURLOPT_URL, url.c_str());
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set URL [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 
-    code = curl_easy_setopt(conn, CURLOPT_FOLLOWLOCATION, 1L);
+    code = curl_easy_setopt(conn.get(), CURLOPT_FOLLOWLOCATION, 1L);
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set redirect option [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
@@ -51,7 +67,7 @@ bool init(CURL*& conn, char* errorBuffer, std::string const& url, std::string* b
      * default bundle, then the CURLOPT_CAPATH option might come handy for
      * you.
      */
-    code = curl_easy_setopt(conn, CURLOPT_SSL_VERIFYPEER, 0L);
+    code = curl_easy_setopt(conn.get(), CURLOPT_SSL_VERIFYPEER, 0L);
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set skip verify peer [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
@@ -65,7 +81,7 @@ bool init(CURL*& conn, char* errorBuffer, std::string const& url, std::string* b
      * subjectAltName) fields, libcurl will refuse to connect. You can skip
      * this check, but this will make the connection less secure.
      */
-    code = curl_easy_setopt(conn, CURLOPT_SSL_VERIFYHOST, 0L);
+    code = curl_easy_setopt(conn.get(), CURLOPT_SSL_VERIFYHOST, 0L);
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set skip verify host [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
@@ -73,19 +89,19 @@ bool init(CURL*& conn, char* errorBuffer, std::string const& url, std::string* b
 #endif
 
     /* cache the CA cert bundle in memory for a week */
-    code = curl_easy_setopt(conn, CURLOPT_CA_CACHE_TIMEOUT, 604800L);
+    code = curl_easy_setopt(conn.get(), CURLOPT_CA_CACHE_TIMEOUT, 604800L);
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set certificates [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 
-    code = curl_easy_setopt(conn, CURLOPT_WRITEFUNCTION, writer);
+    code = curl_easy_setopt(conn.get(), CURLOPT_WRITEFUNCTION, writer);
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set writer [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
     }
 
-    code = curl_easy_setopt(conn, CURLOPT_WRITEDATA, buffer);
+    code = curl_easy_setopt(conn.get(), CURLOPT_WRITEDATA, buffer);
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set write data [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
@@ -99,20 +115,24 @@ namespace request {
 std::optional<std::string> request(std::string const& url) {
     std::string buffer{};
     char errorBuffer[CURL_ERROR_SIZE]{};
-    CURL* conn{NULL};
+    std::shared_ptr<FILE> verboseCurl{nullptr};
+    std::shared_ptr<CURL> conn{nullptr};
     CURLcode code;
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
+#ifdef VERBOSE_CURL
+    verboseCurl.reset(fopen("linkCollectorCurl.txt", "wb"), fclose);
+#endif
+
     // Initialize CURL connection
-    if (!init(conn, errorBuffer, url, &buffer)) {
+    if (!init(conn, errorBuffer, url, &buffer, verboseCurl.get())) {
         spdlog::critical("{} Connection initialization failed", __PRETTY_FUNCTION__);
         return {};
     }
 
     // Retrieve content for the URL
-    code = curl_easy_perform(conn);
-    curl_easy_cleanup(conn);
+    code = curl_easy_perform(conn.get());
 
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set get '{}'", __PRETTY_FUNCTION__, url);

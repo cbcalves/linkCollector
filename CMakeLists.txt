@@ -50,12 +50,15 @@ add_library(linkCollectorLib
     src/request/process.cpp
     src/resources/query.h
     src/resources/query.cpp
+    src/signal/signalhandler.h
+    src/signal/signalhandler.cpp
 )
 
 target_link_libraries(linkCollectorLib
     CURL::libcurl
     nlohmann_json::nlohmann_json
     SQLite::SQLite3
+    spdlog
 )
 
 if (ENABLE_TEST)

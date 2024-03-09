@@ -12,10 +12,17 @@ int writer(char* data, size_t size, size_t nmemb, std::string* writerData) {
     return size * nmemb;
 }
 
+namespace request {
+
 bool init(std::shared_ptr<CURL>& conn, char* errorBuffer, std::string const& url, std::string* buffer, FILE* verboseFile = nullptr) {
     CURLcode code;
 
-    conn.reset(curl_easy_init(), curl_easy_cleanup);
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+
+    conn.reset(curl_easy_init(), [](CURL* curl) {
+        curl_easy_cleanup(curl);
+        curl_global_cleanup();
+    });
 
     if (conn == NULL) {
         spdlog::critical("{} Failed to create CURL connection", __PRETTY_FUNCTION__);
@@ -26,7 +33,7 @@ bool init(std::shared_ptr<CURL>& conn, char* errorBuffer, std::string const& url
     /*
      * Set library to display a lot of verbose information about its operations.
      */
-    code = curl_easy_setopt(conn.get(), CURLOPT_VERBOSE, 0L);
+    code = curl_easy_setopt(conn.get(), CURLOPT_VERBOSE, 1L);
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set verbose mode [{}]", __PRETTY_FUNCTION__, errorBuffer);
         return false;
@@ -110,29 +117,42 @@ bool init(std::shared_ptr<CURL>& conn, char* errorBuffer, std::string const& url
     return true;
 }
 
-namespace request {
+bool setHeaders(CURL* conn, struct curl_slist*& headers) {
+    headers = curl_slist_append(headers, "cookie: countryCode=BR");
+    headers = curl_slist_append(headers, "user-agent: linkCollector/2024.3.8");
+
+    CURLcode code = curl_easy_setopt(conn, CURLOPT_HTTPHEADER, headers);
+    if (code != CURLE_OK) {
+        spdlog::critical("{} Failed to set headers", __PRETTY_FUNCTION__);
+        curl_slist_free_all(headers);
+        return false;
+    }
+
+    return true;
+}
 
 std::optional<std::string> request(std::string const& url) {
     std::string buffer{};
     char errorBuffer[CURL_ERROR_SIZE]{};
     std::shared_ptr<FILE> verboseCurl{nullptr};
     std::shared_ptr<CURL> conn{nullptr};
+    struct curl_slist* headers{nullptr};
     CURLcode code;
 
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-
 #ifdef VERBOSE_CURL
-    verboseCurl.reset(fopen("linkCollectorCurl.txt", "wb"), fclose);
+    verboseCurl.reset(fopen("linkCollectorCurl.txt", "ab"), [](FILE* file) {
+        fflush(file);
+        fclose(file);
+    });
 #endif
 
-    // Initialize CURL connection
-    if (!init(conn, errorBuffer, url, &buffer, verboseCurl.get())) {
+    if (!init(conn, errorBuffer, url, &buffer, verboseCurl.get()) || !setHeaders(conn.get(), headers)) {
         spdlog::critical("{} Connection initialization failed", __PRETTY_FUNCTION__);
         return {};
     }
 
-    // Retrieve content for the URL
     code = curl_easy_perform(conn.get());
+    curl_slist_free_all(headers);
 
     if (code != CURLE_OK) {
         spdlog::critical("{} Failed to set get '{}'", __PRETTY_FUNCTION__, url);

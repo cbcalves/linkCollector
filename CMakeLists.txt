@@ -61,12 +61,27 @@ target_link_libraries(linkCollectorLib
     spdlog
 )
 
+add_executable(linkCollector
+    src/main.cpp
+    src/repository/linkrepository.h
+    src/repository/linkrepository.cpp
+    src/repository/schedulerepository.h
+    src/repository/schedulerepository.cpp
+    src/service/linkservice.h
+    src/service/linkservice.cpp
+    src/service/scheduleservice.h
+    src/service/scheduleservice.cpp
+)
+
+target_link_libraries(linkCollector
+    linkCollectorLib
+    spdlog
+)
+
 if (ENABLE_TEST)
     add_subdirectory(tests)
 endif()
 
 include(GNUInstallDirs)
-install(TARGETS linkCollector
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+install(TARGETS linkCollector RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} )
+install(TARGETS linkCollectorLib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} )
